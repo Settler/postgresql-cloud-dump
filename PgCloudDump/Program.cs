@@ -28,29 +28,33 @@ namespace PgCloudDump
         [Option("-W | --password", "Password", CommandOptionType.SingleValue)]
         [Required]
         public string Password { get; set; }
+        
+        [Option("-o | --output", "Only 'GoogleCloud' supported for now", CommandOptionType.SingleValue)]
+        [Required]
+        public ObjectStore Output { get; set; }
+        
+        [Option("-b | --bucket", "Name of bucket for GoogleCloud", CommandOptionType.SingleValue)]
+        public string Bucket { get; set; }
 
         private static int Main(string[] args) => CommandLineApplication.Execute<Program>(args);
 
         public int OnExecute()
         {
-            var processStartInfo = new ProcessStartInfo("/Applications/Postgres.app/Contents/Versions/latest/bin/pg_dump",
-                                                        $"-h {Host} -p {Port} -U {UserName} -d {DbName} -F tar")
+            var writer = new ObjectStoreWriterFactory().Create(this);
+            
+            var processStartInfo = new ProcessStartInfo("bash",
+                                                        $"-c \"/Applications/Postgres.app/Contents/Versions/latest/bin/pg_dump -h {Host} -p {Port} -U {UserName} -d {DbName} -F tar | gzip\"")
                                    {
                                        RedirectStandardOutput = true,
                                        UseShellExecute = false,
                                        CreateNoWindow = true
                                    };
             processStartInfo.Environment.Add("PGPASSWORD", Password);
-            var process = Process.Start(processStartInfo);
-
-            using(var file = File.Open("test.tar.gz", FileMode.Create, FileAccess.Write))
-            using (var gzip = new GZipStream(file, CompressionLevel.Optimal, leaveOpen: true))
-            {
-                process.StandardOutput.BaseStream.CopyTo(gzip);
-            }
-
-            Console.WriteLine("Done");
+            var process = new Process {StartInfo = processStartInfo};
+            process.Start();
             
+            writer.WriteAsync($"{DbName}.tar.gz", process.StandardOutput.BaseStream).Wait();
+
             process.WaitForExit();
             
             return process.ExitCode;
