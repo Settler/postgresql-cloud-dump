@@ -36,6 +36,9 @@ namespace PgCloudDump
                                                objectsToDelete.Add(obj);
                                        });
 
+            if (objectsToDelete.Count == 0)
+                Console.WriteLine("Nothing to delete.");
+            
             foreach (var objToDelete in objectsToDelete)
             {
                 Console.WriteLine($"Deleting {objToDelete.Name}, because it TimeCreated: {objToDelete.TimeCreated.Value.ToUniversalTime()} is older then threshold: {removeThreshold}");
