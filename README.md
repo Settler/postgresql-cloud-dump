@@ -1,4 +1,5 @@
 # postgresql-cloud-dump
+Only Google Cloud Buckets supported right now.
 
 # How to Use This Image
 ```
