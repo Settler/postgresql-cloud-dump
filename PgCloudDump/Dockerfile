@@ -30,6 +30,7 @@ ENV PGUSER="postgres"
 ENV PGPASSWORD="YOUR_STRONG_PASSWORD"
 ENV OUTPUT="GoogleCloud"
 ENV BUCKET="test-bucket"
+ENV HOST_PATH="/app/backups"
 ENV BACKUP_THRESHOLD="14d"
 
 CMD ["sh", "-c",\
@@ -42,5 +43,6 @@ CMD ["sh", "-c",\
 -o $OUTPUT \
 -b $BUCKET \
 -r $BACKUP_THRESHOLD \
+--path $HOST_PATH \
 --pg-dump-path pg_dump \
 "]
