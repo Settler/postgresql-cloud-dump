@@ -31,12 +31,11 @@ namespace PgCloudDump
         [Required]
         public string Password { get; set; }
 
-        [Option("-o | --output", "Only 'GoogleCloud' supported for now", CommandOptionType.SingleValue)]
+        [Option("-o | --output", "Only 'GoogleCloud' and 'HostPath' supported for now", CommandOptionType.SingleValue)]
         [Required]
         public ObjectStore Output { get; set; }
 
         [Option("-b | --bucket", "Name of bucket for GoogleCloud", CommandOptionType.SingleValue)]
-        [Required]
         public string Bucket { get; set; }
 
         [Option("-r | --remove", "Remove backups older then this value. Example values: '60s', '20m', '12h', '1d'", CommandOptionType.SingleValue)]
@@ -45,6 +44,9 @@ namespace PgCloudDump
 
         [Option("--pg-dump-path", "Path to pg_dump executable", CommandOptionType.SingleValue)]
         public string PathToPgDump { get; set; } = "pg_dump";
+
+        [Option("--path", "Path where backups will be stored when output is HostPath.", CommandOptionType.SingleValue)]
+        public string HostPath { get; set; }
 
         public TimeSpan RemoveThreshold
         {
@@ -114,7 +116,7 @@ namespace PgCloudDump
             var process = new Process {StartInfo = processStartInfo};
             process.Start();
 
-            var backupName = $"{DbName}_{DateTime.UtcNow:s}.tar.gz";
+            var backupName = $"{DbName}_{DateTime.UtcNow.ToString("s").Replace(":", ".")}.tar.gz";
             Console.WriteLine($"Creating new backup: {backupName}...");
 
             writer.WriteAsync(backupName, process.StandardOutput.BaseStream).Wait();

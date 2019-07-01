@@ -15,6 +15,8 @@ namespace PgCloudDump
 
         public GoogleCloudObjectStoreWriter(string bucketName)
         {
+            if (string.IsNullOrWhiteSpace(bucketName)) throw new ArgumentException("--bucket must be set when output is GoogleCloud", nameof(bucketName));
+
             _bucketName = bucketName;
             _storageClient = StorageClient.Create();
         }

@@ -10,6 +10,8 @@ namespace PgCloudDump
             {
                 case ObjectStore.GoogleCloud:
                     return new GoogleCloudObjectStoreWriter(options.Bucket);
+                case ObjectStore.HostPath:
+                    return new HostPathObjectStoreWriter(options.HostPath);
                 default:
                     throw new ArgumentOutOfRangeException(nameof(options.Output), options.Output, null);
             }   
