@@ -1,7 +1,7 @@
 # postgresql-cloud-dump
-Only Google Cloud Buckets supported right now.
+Only Google Cloud Buckets and HostPath supported right now.
 
-# How to Use This Image
+# How to Use This Image with Google Cloud Bucket
 ```
 docker run -d \
     -e PGDATABASE="YOUR_DATABASE_NAME" \
@@ -10,9 +10,25 @@ docker run -d \
     -e PGUSER="postgres" \
     -e PGPASSWORD="YOUR_STRONG_PASSWORD" \
     -e BACKUP_THRESHOLD="14d"
+    -e OUTPUT="GoogleCloud" \
     -e BUCKET="NAME_OF_BUCKET_IN_GOOGLE_STORAGE" \
-    -e GOOGLE_APPLICATION_CREDENTIALS="bucket_access.json"
-    -v PATH_TO_SERVICE_ACCOUNT_JSON_FILE_ON_HOST:/app/bucket_access.json:ro
+    -e GOOGLE_APPLICATION_CREDENTIALS="bucket_access.json" \
+    -v PATH_TO_SERVICE_ACCOUNT_JSON_FILE_ON_HOST:/app/bucket_access.json:ro \
+    settler/postgresql-cloud-dump
+```
+
+# How to Use This Image with Host Path
+```
+docker run -d \
+    -e PGDATABASE="YOUR_DATABASE_NAME" \
+    -e PGHOST="localhost" \
+    -e PGPORT="5432" \
+    -e PGUSER="postgres" \
+    -e PGPASSWORD="YOUR_STRONG_PASSWORD" \
+    -e BACKUP_THRESHOLD="14d"
+    -e OUTPUT="HostPath" \
+    -e HOST_PATH="/app/backups" \
+    -v PATH_TO_BACKUP_FOLDER_ON_HOST:/app/backups \
     settler/postgresql-cloud-dump
 ```
 
