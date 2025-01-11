@@ -35,8 +35,8 @@ namespace PgCloudDump
         [Required]
         public ObjectStore Output { get; set; }
 
-        [Option("-b | --bucket", "Name of bucket for GoogleCloud", CommandOptionType.SingleValue)]
-        public string Bucket { get; set; }
+        [Option("-b | --bucket", "Name of bucket for GoogleCloud or YandexCloud", CommandOptionType.SingleValue)]
+        public string? Bucket { get; set; }
 
         [Option("-r | --remove", "Remove backups older then this value. Example values: '60s', '20m', '12h', '1d'", CommandOptionType.SingleValue)]
         [Required]
@@ -46,7 +46,7 @@ namespace PgCloudDump
         public string PathToPgDump { get; set; } = "pg_dump";
 
         [Option("--path", "Path where backups will be stored when output is HostPath.", CommandOptionType.SingleValue)]
-        public string HostPath { get; set; }
+        public string? HostPath { get; set; }
 
         public TimeSpan RemoveThreshold
         {
@@ -68,7 +68,7 @@ namespace PgCloudDump
 
             CheckDbConnection();
 
-            var writer = new ObjectStoreWriterFactory().Create(this);
+            var writer = ObjectStoreWriterFactory.Create(Output, Bucket ?? HostPath ?? string.Empty);
             RemoveOldBackups(writer);
             var exitCode = CreateNewBackup(writer);
 
@@ -116,7 +116,7 @@ namespace PgCloudDump
             var process = new Process {StartInfo = processStartInfo};
             process.Start();
 
-            var backupName = $"{DbName}_{DateTime.UtcNow.ToString("s").Replace(":", ".")}.tar.gz";
+            var backupName = $"{DbName}/{DbName}_{DateTime.UtcNow.ToString("s").Replace(":", ".")}Z.tar.gz";
             Console.WriteLine($"Creating new backup: {backupName}...");
 
             writer.WriteAsync(backupName, process.StandardOutput.BaseStream).Wait();
@@ -133,7 +133,7 @@ namespace PgCloudDump
 
             Console.WriteLine("Removing old backups...");
 
-            writer.DeleteOldBackupsAsync(removeOlderThen).Wait();
+            writer.DeleteOldBackupsAsync(DbName, removeOlderThen).Wait();
 
             Console.WriteLine("Removing old backups completed.");
         }

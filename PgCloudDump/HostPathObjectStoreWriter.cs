@@ -19,12 +19,12 @@ namespace PgCloudDump
             _hostPath = hostPath;
         }
         
-        public async Task WriteAsync(string fileName, Stream backupStream)
+        public async Task WriteAsync(string path, Stream backupStream)
         {
             if (!Directory.Exists(_hostPath))
                 Directory.CreateDirectory(_hostPath);
 
-            var fullOutputPath = Path.Combine(_hostPath, fileName);
+            var fullOutputPath = Path.Combine(_hostPath, path);
             
             var memory = new Memory<byte>(new byte[1024]);
             using (var fileStream = File.OpenWrite(fullOutputPath))
@@ -36,7 +36,7 @@ namespace PgCloudDump
             }
         }
 
-        public Task DeleteOldBackupsAsync(DateTime removeThreshold)
+        public Task DeleteOldBackupsAsync(string path, DateTime removeThreshold)
         {
             if (!Directory.Exists(_hostPath))
             {
@@ -44,7 +44,8 @@ namespace PgCloudDump
                 return Task.CompletedTask;
             }
 
-            var files = Directory.GetFiles(_hostPath, "*.tar.gz");
+            var fullOutputPath = Path.Combine(_hostPath, path);
+            var files = Directory.GetFiles(fullOutputPath, "*.tar.gz");
             var objectsToDelete = files.Where(o => File.GetCreationTimeUtc(o) <= removeThreshold).ToArray();
 
             if (objectsToDelete.Length == 0)

@@ -6,7 +6,7 @@ namespace PgCloudDump
 {
     public interface IObjectStoreWriter
     {
-        Task WriteAsync(string fileName, Stream backupStream);
-        Task DeleteOldBackupsAsync(DateTime removeThreshold);
+        Task WriteAsync(string path, Stream backupStream);
+        Task DeleteOldBackupsAsync(string path, DateTime removeThreshold);
     }
 }

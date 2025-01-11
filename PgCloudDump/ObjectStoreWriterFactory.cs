@@ -2,19 +2,17 @@ using System;
 
 namespace PgCloudDump
 {
-    public class ObjectStoreWriterFactory
+    public abstract class ObjectStoreWriterFactory
     {
-        public IObjectStoreWriter Create(Program options)
+        public static IObjectStoreWriter Create(ObjectStore objectStore, string output)
         {
-            switch (options.Output)
+            return objectStore switch
             {
-                case ObjectStore.GoogleCloud:
-                    return new GoogleCloudObjectStoreWriter(options.Bucket);
-                case ObjectStore.HostPath:
-                    return new HostPathObjectStoreWriter(options.HostPath);
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(options.Output), options.Output, null);
-            }   
+                ObjectStore.GoogleCloud => new GoogleCloudObjectStoreWriter(output),
+                ObjectStore.HostPath => new HostPathObjectStoreWriter(output),
+                ObjectStore.YandexCloud => new YandexCloudObjectStoreWriter(output),
+                _ => throw new ArgumentOutOfRangeException(nameof(objectStore), objectStore, null)
+            };
         }
     }
 }

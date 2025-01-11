@@ -3,6 +3,7 @@
     public enum ObjectStore
     {
         GoogleCloud,
-        HostPath
+        HostPath,
+        YandexCloud
     }
 }

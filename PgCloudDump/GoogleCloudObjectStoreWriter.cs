@@ -21,14 +21,14 @@ namespace PgCloudDump
             _storageClient = StorageClient.Create();
         }
         
-        public Task WriteAsync(string fileName, Stream backupStream)
+        public Task WriteAsync(string path, Stream backupStream)
         {
-            return _storageClient.UploadObjectAsync(_bucketName, fileName, null, backupStream);
+            return _storageClient.UploadObjectAsync(_bucketName, path, null, backupStream);
         }
 
-        public async Task DeleteOldBackupsAsync(DateTime removeThreshold)
+        public async Task DeleteOldBackupsAsync(string path, DateTime removeThreshold)
         {
-            var objects = _storageClient.ListObjectsAsync(_bucketName);
+            var objects = _storageClient.ListObjectsAsync(_bucketName, path);
             
 
             var objectsToDelete = new List<Object>();
