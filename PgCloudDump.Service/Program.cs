@@ -11,6 +11,10 @@ try
     Log.Information("Starting web application");
     
     var builder = WebApplication.CreateBuilder(args);
+    var logger = new LoggerConfiguration()
+                 .ReadFrom.Configuration(builder.Configuration)
+                 .Enrich.FromLogContext()
+                 .CreateLogger();
 
     builder.Services.Configure<BackupOptions>(builder.Configuration.GetSection(nameof(BackupOptions)));
 
@@ -24,7 +28,7 @@ try
                                                     options.TimeZoneInfo = TimeZoneInfo.Local;
                                                 });
 
-    builder.Services.AddSerilog();
+    builder.Services.AddSerilog(logger);
 
     var app = builder.Build();
 
