@@ -102,7 +102,7 @@ public class BackupJob(ICronConfiguration<BackupJob> cronConfiguration,
     {
         try
         {
-            var backupPath = $"{database}/{database}_{DateTime.UtcNow.ToString("s").Replace(":", ".")}Z.tar.gz";
+            var backupPath = $"{connectionString.Host}/{database}/{database}_{DateTime.UtcNow.ToString("s").Replace(":", ".")}Z.tar.gz";
             logger.LogInformation("Creating new backup of '{Database}' to '{DatabaseBackupPath}'...", database, backupPath);
 
             var writer = ObjectStoreWriterFactory.Create(options.Value.ObjectStore, options.Value.Output);
