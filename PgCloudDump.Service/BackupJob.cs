@@ -105,6 +105,7 @@ public class BackupJob(ICronConfiguration<BackupJob> cronConfiguration,
             var backupPath = $"{connectionString.Host}/{database}/{database}_{DateTime.UtcNow.ToString("s").Replace(":", ".")}Z.backup";
             logger.LogInformation("Creating new backup of '{Database}' to '{DatabaseBackupPath}'...", database, backupPath);
 
+            var sw = Stopwatch.StartNew();
             var writer = ObjectStoreWriterFactory.Create(options.Value.ObjectStore, options.Value.Output);
             var pgDumpCommand = $"-h {connectionString.Host} -p {connectionString.Port} -U {connectionString.Username} -d {database} -Fc";
             var processStartInfo = new ProcessStartInfo(options.Value.PathToPgDump, pgDumpCommand)
@@ -122,7 +123,7 @@ public class BackupJob(ICronConfiguration<BackupJob> cronConfiguration,
             
             process.Dispose();
 
-            logger.LogInformation("Creating new backup of '{Database}' completed.", database);
+            logger.LogInformation($"Creating new backup of '{{Database}}' completed in '{sw.Elapsed}'.", database);
         }
         catch (Exception e)
         {
