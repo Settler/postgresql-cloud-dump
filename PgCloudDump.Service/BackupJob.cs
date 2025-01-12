@@ -102,12 +102,12 @@ public class BackupJob(ICronConfiguration<BackupJob> cronConfiguration,
     {
         try
         {
-            var backupPath = $"{connectionString.Host}/{database}/{database}_{DateTime.UtcNow.ToString("s").Replace(":", ".")}Z.tar.gz";
+            var backupPath = $"{connectionString.Host}/{database}/{database}_{DateTime.UtcNow.ToString("s").Replace(":", ".")}Z.backup";
             logger.LogInformation("Creating new backup of '{Database}' to '{DatabaseBackupPath}'...", database, backupPath);
 
             var writer = ObjectStoreWriterFactory.Create(options.Value.ObjectStore, options.Value.Output);
-            var pgDumpCommand = $"{options.Value.PathToPgDump} -h {connectionString.Host} -p {connectionString.Port} -U {connectionString.Username} -d {database} -F tar";
-            var processStartInfo = new ProcessStartInfo("bash", $"-c \"{pgDumpCommand} | gzip\"")
+            var pgDumpCommand = $"-h {connectionString.Host} -p {connectionString.Port} -U {connectionString.Username} -d {database} -Fc";
+            var processStartInfo = new ProcessStartInfo(options.Value.PathToPgDump, pgDumpCommand)
                                    {
                                        RedirectStandardOutput = true,
                                        UseShellExecute = false,
@@ -122,7 +122,7 @@ public class BackupJob(ICronConfiguration<BackupJob> cronConfiguration,
             
             process.Dispose();
 
-            logger.LogInformation("Creating new backup completed.");
+            logger.LogInformation("Creating new backup of '{Database}' completed.", database);
         }
         catch (Exception e)
         {
