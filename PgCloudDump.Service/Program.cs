@@ -21,6 +21,7 @@ try
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
+    builder.Services.AddSingleton<BackupJob>();
     builder.Services.ApplyResulation<BackupJob>(options =>
                                                 {
                                                     var backupOptions = builder.Configuration.GetRequiredSection(nameof(BackupOptions)).Get<BackupOptions>();
