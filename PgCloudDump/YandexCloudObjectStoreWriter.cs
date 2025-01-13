@@ -14,7 +14,7 @@ public class YandexCloudObjectStoreWriter : IObjectStoreWriter
 
     public YandexCloudObjectStoreWriter(string bucketName)
     {
-        if (string.IsNullOrWhiteSpace(bucketName)) throw new ArgumentException("--bucket must be set when output is GoogleCloud", nameof(bucketName));
+        if (string.IsNullOrWhiteSpace(bucketName)) throw new ArgumentException("--bucket must be set when output is YandexCloud", nameof(bucketName));
 
         _bucketName = bucketName;
         var configsS3 = new AmazonS3Config

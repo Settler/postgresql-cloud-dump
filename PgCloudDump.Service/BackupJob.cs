@@ -12,6 +12,8 @@ public class BackupJob(ICronConfiguration<BackupJob> cronConfiguration,
                        IOptions<BackupOptions> options) : 
     CronJobService(cronConfiguration.CronExpression, cronConfiguration.TimeZoneInfo, cronConfiguration.CronFormat)
 {
+    private readonly IObjectStoreWriter _writer = ObjectStoreWriterFactory.Create(options.Value.ObjectStore, options.Value.Output);
+
     public override async Task StartAsync(CancellationToken cancellationToken)
     {
         await CheckServersAsync(cancellationToken);
@@ -102,11 +104,10 @@ public class BackupJob(ICronConfiguration<BackupJob> cronConfiguration,
     {
         try
         {
-            var backupPath = $"{connectionString.Host}/{database}/{database}_{DateTime.UtcNow.ToString("s").Replace(":", ".")}Z.backup";
+            var backupPath = $"{connectionString.Host}/{database}.backup";
             logger.LogInformation("Creating new backup of '{Database}' to '{DatabaseBackupPath}'...", database, backupPath);
 
             var sw = Stopwatch.StartNew();
-            var writer = ObjectStoreWriterFactory.Create(options.Value.ObjectStore, options.Value.Output);
             var pgDumpCommand = $"-h {connectionString.Host} -p {connectionString.Port} -U {connectionString.Username} -d {database} -Fc";
             var processStartInfo = new ProcessStartInfo(options.Value.PathToPgDump, pgDumpCommand)
                                    {
@@ -118,7 +119,7 @@ public class BackupJob(ICronConfiguration<BackupJob> cronConfiguration,
             var process = new Process {StartInfo = processStartInfo};
             process.Start();
 
-            await writer.WriteAsync(backupPath, process.StandardOutput.BaseStream);
+            await _writer.WriteAsync(backupPath, process.StandardOutput.BaseStream);
             await process.WaitForExitAsync(cancellationToken);
             
             process.Dispose();
