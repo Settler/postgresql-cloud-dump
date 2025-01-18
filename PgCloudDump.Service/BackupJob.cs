@@ -69,14 +69,40 @@ public class BackupJob(ICronConfiguration<BackupJob> cronConfiguration,
     public override async Task DoWork(CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting backup process...");
+        
+        var databasesToBackup = await GetDatabasesAsync(cancellationToken);
+        await BackupDatabasesAsync(databasesToBackup, cancellationToken);
+        
+        logger.LogInformation("Backup is finished.");
+    }
+
+    private async Task BackupDatabasesAsync(List<(string databaseName, NpgsqlConnectionStringBuilder connectionString)> databasesToBackup, CancellationToken cancellationToken)
+    {
+        var semaphoreSlim = new SemaphoreSlim(options.Value.JobsCount);
+        foreach (var (database, connectionString) in databasesToBackup)
+        {
+            try
+            {
+                await semaphoreSlim.WaitAsync(cancellationToken);
+                await BackupDatabaseAsync(database, connectionString, cancellationToken);
+            }
+            finally
+            {
+                semaphoreSlim.Release();
+            }
+        }
+    }
+
+    private async Task<List<(string databaseName, NpgsqlConnectionStringBuilder connectionString)>> GetDatabasesAsync(CancellationToken cancellationToken)
+    {
+        var databasesToBackup = new List<(string databaseName, NpgsqlConnectionStringBuilder connectionString)>();
         foreach (var server in options.Value.Servers)
         {
             var builder = new NpgsqlConnectionStringBuilder(server.ConnectionString);
+            logger.LogInformation("Reading databases from server {Server}...", builder.Host);
 
             try
             {
-                logger.LogInformation("Backing up databases from server: {Server}...", builder.Host);
-
                 var regex = new Regex(server.DatabaseSelectPattern);
 
                 await using var npgsqlConnection = new NpgsqlConnection(server.ConnectionString);
@@ -84,20 +110,26 @@ public class BackupJob(ICronConfiguration<BackupJob> cronConfiguration,
                 await using var command = npgsqlConnection.CreateCommand();
                 command.CommandText = "SELECT datname FROM pg_database;";
                 await using var reader = await command.ExecuteReaderAsync(cancellationToken);
+
+                var dbCount = 0;
                 while (await reader.ReadAsync(cancellationToken))
                 {
                     var database = reader.GetString(0);
-                    if (regex.IsMatch(database))
-                        await BackupDatabaseAsync(database, builder, cancellationToken);
+                    if (!regex.IsMatch(database))
+                        continue;
+
+                    databasesToBackup.Add((database, builder));
+                    dbCount++;
                 }
-            
-                logger.LogInformation("Finished backing up databases from server: {Server}", builder.Host);
+                
+                logger.LogInformation("Read {DatabaseCount} databases from server {Server}.", dbCount, builder.Host);
             }
             catch (Exception e)
             {
-                logger.LogError(e, "Failed to backup databases on server: {Server}", builder.Host);
+                logger.LogError(e, "Failed to read databases from server: {Server}", builder.Host);
             }
         }
+        return databasesToBackup;
     }
 
     private async Task BackupDatabaseAsync(string database, NpgsqlConnectionStringBuilder connectionString, CancellationToken cancellationToken)
