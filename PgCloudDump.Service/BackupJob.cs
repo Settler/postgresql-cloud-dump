@@ -69,22 +69,24 @@ public class BackupJob(ICronConfiguration<BackupJob> cronConfiguration,
     public override async Task DoWork(CancellationToken cancellationToken)
     {
         logger.LogInformation("Starting backup process...");
+        var sw = Stopwatch.StartNew();
         
         var databasesToBackup = await GetDatabasesAsync(cancellationToken);
         await BackupDatabasesAsync(databasesToBackup, cancellationToken);
         
-        logger.LogInformation("Backup is finished.");
+        logger.LogInformation($"Backup is finished. It took {sw.Elapsed}.");
     }
 
     private async Task BackupDatabasesAsync(List<(string databaseName, NpgsqlConnectionStringBuilder connectionString)> databasesToBackup, CancellationToken cancellationToken)
     {
         var semaphoreSlim = new SemaphoreSlim(options.Value.JobsCount);
+        logger.LogInformation($"Starting databases backup using {options.Value.JobsCount} concurrent jobs...");
         foreach (var (database, connectionString) in databasesToBackup)
         {
             try
             {
                 await semaphoreSlim.WaitAsync(cancellationToken);
-                await BackupDatabaseAsync(database, connectionString, cancellationToken);
+                _ = BackupDatabaseAsync(database, connectionString, cancellationToken);
             }
             finally
             {
