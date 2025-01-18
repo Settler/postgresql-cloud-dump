@@ -83,15 +83,8 @@ public class BackupJob(ICronConfiguration<BackupJob> cronConfiguration,
         logger.LogInformation($"Starting databases backup using {options.Value.JobsCount} concurrent jobs...");
         foreach (var (database, connectionString) in databasesToBackup)
         {
-            try
-            {
-                await semaphoreSlim.WaitAsync(cancellationToken);
-                _ = BackupDatabaseAsync(database, connectionString, cancellationToken);
-            }
-            finally
-            {
-                semaphoreSlim.Release();
-            }
+            await semaphoreSlim.WaitAsync(cancellationToken);
+            _ = BackupDatabaseAsync(database, connectionString, cancellationToken).ContinueWith(_ => semaphoreSlim.Release(), cancellationToken);
         }
     }
 
@@ -158,7 +151,7 @@ public class BackupJob(ICronConfiguration<BackupJob> cronConfiguration,
             
             process.Dispose();
 
-            logger.LogInformation($"Creating new backup of '{{Database}}' completed in '{sw.Elapsed}'.", database);
+            logger.LogInformation($"Backup '{{Database}}' completed in '{sw.Elapsed}'.", database);
         }
         catch (Exception e)
         {
