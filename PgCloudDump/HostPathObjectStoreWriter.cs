@@ -63,5 +63,15 @@ namespace PgCloudDump
 
             return Task.CompletedTask;
         }
+
+        public IAsyncEnumerable<string> ListBackupsAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<Stream> GetBackupStreamAsync(string path)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

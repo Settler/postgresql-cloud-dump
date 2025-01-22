@@ -9,9 +9,9 @@
 
     <ItemGroup>
       <PackageReference Include="AWSSDK.S3" Version="3.7.410.13" />
-      <PackageReference Include="Google.Cloud.Storage.V1" Version="2.2.1" />
+      <PackageReference Include="Google.Cloud.Storage.V1" Version="4.10.0" />
       <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="2.2.5" />
-      <PackageReference Include="Npgsql" Version="4.0.14" />
+      <PackageReference Include="Npgsql" Version="9.0.2" />
     </ItemGroup>
 
 </Project>

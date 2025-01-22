@@ -17,6 +17,7 @@ try
                  .CreateLogger();
 
     builder.Services.Configure<BackupOptions>(builder.Configuration.GetSection(nameof(BackupOptions)));
+    builder.Services.Configure<RestoreOptions>(builder.Configuration.GetSection(nameof(RestoreOptions)));
 
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
@@ -28,6 +29,8 @@ try
                                                     options.CronExpression = backupOptions.CronExpression;
                                                     options.TimeZoneInfo = TimeZoneInfo.Local;
                                                 });
+
+    builder.Services.AddSingleton<RestoreService>();
 
     builder.Services.AddSerilog(logger);
 
