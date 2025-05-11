@@ -14,4 +14,5 @@ public class BackupServer
 {
     public required string ConnectionString { get; set; }
     public required string DatabaseSelectPattern { get; set; }
+    public required string DatabaseExcludePattern { get; set; }
 }
