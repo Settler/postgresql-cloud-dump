@@ -99,7 +99,7 @@ public class BackupJob(ICronConfiguration<BackupJob> cronConfiguration,
             try
             {
                 var selectRegex = new Regex(server.DatabaseSelectPattern);
-                var excludeRegex = new Regex(server.DatabaseExcludePattern);
+                var excludeRegex = server.DatabaseExcludePattern is null ? null : new Regex(server.DatabaseExcludePattern);
 
                 await using var npgsqlConnection = new NpgsqlConnection(server.ConnectionString);
                 await npgsqlConnection.OpenAsync(cancellationToken);
@@ -111,7 +111,7 @@ public class BackupJob(ICronConfiguration<BackupJob> cronConfiguration,
                 while (await reader.ReadAsync(cancellationToken))
                 {
                     var database = reader.GetString(0);
-                    if (!selectRegex.IsMatch(database) || excludeRegex.IsMatch(database))
+                    if (!selectRegex.IsMatch(database) || excludeRegex?.IsMatch(database) == true)
                         continue;
 
                     databasesToBackup.Add((database, builder));
