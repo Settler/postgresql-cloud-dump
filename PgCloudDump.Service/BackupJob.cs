@@ -140,12 +140,16 @@ public class BackupJob(ICronConfiguration<BackupJob> cronConfiguration,
             var processStartInfo = new ProcessStartInfo(options.Value.PathToPgDump, pgDumpCommand)
                                    {
                                        RedirectStandardOutput = true,
+                                       RedirectStandardError = true,
                                        UseShellExecute = false,
                                        CreateNoWindow = true
                                    };
             processStartInfo.Environment.Add("PGPASSWORD", connectionString.Password);
             var process = new Process {StartInfo = processStartInfo};
+            process.ErrorDataReceived += (_, args) => logger.LogError($"Error while backup '{{Database}}': {args.Data}.", database);
             process.Start();
+            
+            process.BeginErrorReadLine();
 
             await _writer.WriteAsync(backupPath, process.StandardOutput.BaseStream);
             await process.WaitForExitAsync(cancellationToken);
