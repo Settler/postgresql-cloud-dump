@@ -146,7 +146,7 @@ public class BackupJob(ICronConfiguration<BackupJob> cronConfiguration,
                                    };
             processStartInfo.Environment.Add("PGPASSWORD", connectionString.Password);
             var process = new Process {StartInfo = processStartInfo};
-            process.ErrorDataReceived += (_, args) => logger.LogError($"Error while backup '{{Database}}': {args.Data}.", database);
+            process.ErrorDataReceived += (_, args) => PgDumpErrorReceived(database, args);
             process.Start();
             
             process.BeginErrorReadLine();
@@ -162,5 +162,11 @@ public class BackupJob(ICronConfiguration<BackupJob> cronConfiguration,
         {
             logger.LogError(e, "Failed to backup database '{Database}' on server '{Server}'.", database, connectionString.Host);
         }
+    }
+
+    private void PgDumpErrorReceived(string database, DataReceivedEventArgs args)
+    {
+        if (!string.IsNullOrWhiteSpace(args.Data))
+            logger.LogError($"Error while backup '{{Database}}': {args.Data}.", database);
     }
 }
